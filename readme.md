@@ -22,4 +22,11 @@ The following communication protocols are incuded:
 - MQTT 
 - I2C
 
+# Sensor nodes 
 
+The base embeded computational unit for each node is the module based on ESP32 by Olimex.
+
+A list of the different node with each sensor can be foound on [system.md](./system.md)
+
+## Diagram
+![diagram](./diagram.png)
