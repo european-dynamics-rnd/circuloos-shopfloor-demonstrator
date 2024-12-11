@@ -1,4 +1,0 @@
-[submodule "circuloos-data-platform"]
-	path = circuloos-data-platform
-	url = https://github.com/european-dynamics-rnd/circuloos-data-platform.git
-	branch = master
