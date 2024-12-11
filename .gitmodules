@@ -1,0 +1,4 @@
+[submodule "circuloos-data-platform"]
+	path = circuloos-data-platform
+	url = git@github.com:european-dynamics-rnd/circuloos-data-platform.git
+	branch = circuloos-shopfloor-demonstrator
