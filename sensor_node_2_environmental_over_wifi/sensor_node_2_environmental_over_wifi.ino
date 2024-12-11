@@ -11,7 +11,7 @@
 Bme68x bme;
 
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
+// #include <WiFiClientSecure.h> // enable for mqtts
 #include <MQTT.h>
 #include <ArduinoJson.h>
 #include <ESPmDNS.h>
@@ -19,13 +19,14 @@ Bme68x bme;
 const char ssid[] = "TP-Link_9DE0";
 const char pass[] = "11531081";
 
-const char mqtt_servername[] = "circuloos-shopfloor.local"; // the name of the rasberyPi (/etc/hostname) using mDNS/avahi 
+const char mqtt_servername[] = "circuloos-shopfloor"; // the name of the rasberyPi (/etc/hostname) using mDNS/avahi 
 IPAddress mqtt_server_ip;
 const int mqtt_server_port = 1883;// 8883;
 const char mqtt_server_username[] = "ramp-iot";
 const char mqtt_server_password[] = "PmnMBT@c2Hf62Y4%sAJf";
 
-WiFiClientSecure net;
+// WiFiClientSecure net; // enable for mqtts
+WiFiClient net;
 MQTTClient mqtt_client;
 
 lwmqtt_return_code_t mqtt_client_return_code;  // Arduino_library_folder\Arduino\libraries\MQTT\src\lwmqtt\lwmqtt.h
@@ -52,6 +53,11 @@ String mqtt_data = "";
 void setup_wifi_mqtt() {
   WiFi.begin(ssid, pass);
 
+ if(!MDNS.begin("esp32")) {
+     Serial.println("Error starting mDNS");
+     return;
+  }
+
   while (mqtt_server_ip.toString() == "0.0.0.0") {
     Serial.println("Resolving host...");
     delay(250);
@@ -59,7 +65,7 @@ void setup_wifi_mqtt() {
   }
   Serial.println("Host address resolved:");
   Serial.println(mqtt_server_ip.toString());   
-  
+
 // if you are using a normal DNS change the mqtt_server_ip->mqtt_servername
   mqtt_client.begin(mqtt_server_ip, mqtt_server_port, net);
   // mqtt_client.onMessage(messageReceived);
@@ -74,10 +80,9 @@ void connect_mqtt() {
 
   Serial.print("\nconnecting...");
   // do not verify tls certificate
-  // check the following example for methods to verify the server:
-  // https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino
-  net.setInsecure();
-  while (!mqtt_client.connect("arduino", mqtt_server_username, mqtt_server_password)) {
+  // net.setInsecure(); // enable for mqtts see https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino
+
+  while (!mqtt_client.connect("node_2", mqtt_server_username, mqtt_server_password)) {
     mqtt_client_return_code = mqtt_client.returnCode();
     mqtt_client_last_error = mqtt_client.lastError();
     Serial.print(mqtt_client_return_code);
