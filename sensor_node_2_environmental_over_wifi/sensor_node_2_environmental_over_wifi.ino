@@ -14,14 +14,16 @@ Bme68x bme;
 #include <WiFiClientSecure.h>
 #include <MQTT.h>
 #include <ArduinoJson.h>
+#include <ESPmDNS.h>
 
-const char ssid[] = "LEDE";
-const char pass[] = "kostasgompakis";
+const char ssid[] = "TP-Link_9DE0";
+const char pass[] = "11531081";
 
-const char mqtt_server[] = "mqtt.fortesie.edrnd.cloud";
-const int mqtt_server_port = 8883;
-const char mqtt_server_username[] = "";
-const char mqtt_server_password[] = "";
+const char mqtt_servername[] = "circuloos-shopfloor.local"; // the name of the rasberyPi (/etc/hostname) using mDNS/avahi 
+IPAddress mqtt_server_ip;
+const int mqtt_server_port = 1883;// 8883;
+const char mqtt_server_username[] = "ramp-iot";
+const char mqtt_server_password[] = "PmnMBT@c2Hf62Y4%sAJf";
 
 WiFiClientSecure net;
 MQTTClient mqtt_client;
@@ -49,7 +51,17 @@ String mqtt_data = "";
 
 void setup_wifi_mqtt() {
   WiFi.begin(ssid, pass);
-  mqtt_client.begin(mqtt_server, mqtt_server_port, net);
+
+  while (mqtt_server_ip.toString() == "0.0.0.0") {
+    Serial.println("Resolving host...");
+    delay(250);
+    mqtt_server_ip = MDNS.queryHost(mqtt_servername);
+  }
+  Serial.println("Host address resolved:");
+  Serial.println(mqtt_server_ip.toString());   
+  
+// if you are using a normal DNS change the mqtt_server_ip->mqtt_servername
+  mqtt_client.begin(mqtt_server_ip, mqtt_server_port, net);
   // mqtt_client.onMessage(messageReceived);
 }
 
