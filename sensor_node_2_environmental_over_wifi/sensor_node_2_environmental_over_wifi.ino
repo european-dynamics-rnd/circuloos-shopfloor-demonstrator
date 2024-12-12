@@ -109,11 +109,11 @@ void mqtt_publish() {
   // publish a message roughly every second.
   if (millis() - lastMillis > 1000) {
     lastMillis = millis();
-    mqtt_client.publish("/hello_text", mqtt_data);
+    // mqtt_client.publish("/hello_text", mqtt_data);
     delay(10); 
     char output[256];
     serializeJson(mqtt_data_json, output);
-    mqtt_client.publish("/hello_json", output);
+    mqtt_client.publish("/json/BME680KEYas32r/node-002/attrs", output); // See Readme_mqtt.md
   }
 }
 
@@ -188,4 +188,5 @@ void setup(void) {
 void loop(void) {
   read_bmp680_i2c();
   mqtt_publish();
+  delay(10 * 60 * 1000); //10min delay
 }
