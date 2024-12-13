@@ -55,7 +55,7 @@ The data is then sent via RS-485 to the Raspberry Pi. An python script reads the
 The node/ESP32 reads the external BME680 sensor via I2C every 10min, transform the measurements into a json and send it to a local MQTT Broker, running on the RasberyPi.
 The json message it is read by the IoTAgent and becomes avalable to the local CIRCULOOS data platform. 
 
---Image placeholder --
+![node_2](./images/node_2.jpg)
 
 ## sensor_node_3_temperature_over_can
 
@@ -64,7 +64,7 @@ The node/ESP32 reads the external Pt100 and a K-type thermocouple every 10min, a
 An python script reads the data from the serial and transform it on a NGSI-LD entity where it becomes available on the local CIRCULOOS data platform.
 
 
---Image placeholder --
+![node_3](./images/node_3.jpg)
 
 
 <br />
