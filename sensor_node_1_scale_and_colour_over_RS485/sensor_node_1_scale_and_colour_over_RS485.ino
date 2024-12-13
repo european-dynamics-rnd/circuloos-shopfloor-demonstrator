@@ -5,11 +5,16 @@
 DFRobot_HX711_I2C MyScale;
 
 DFRobot_AS7341 as7341;
+String as7341_output;
+
+#define RXD1 36
+#define TXD1 4
 
 
 void setup() {
   Serial.begin(115200);
-  calibreate_scale();
+  Serial1.begin(9600, SERIAL_8E1, RXD1, TXD1);
+  // calibreate_scale();
 }
 
 
@@ -72,7 +77,7 @@ void read_as7341(){
   Serial.print("NIR:");
   Serial.println(data2.ADNIR);
 
-  String output =  String(data1.ADF2) + "," + String(data1.ADF4) + "," + String(data1.ADF3) + "," + String(data2.ADF5) + "," + String(data2.ADF7) + "," + String(data2.ADF8) + "," + String(data2.ADCLEAR) + "," + String(data2.ADF6) + "," + String(data2.ADNIR);
+as7341_output = "as7341:" + String(data1.ADF2) + "," + String(data1.ADF4) + "," + String(data1.ADF3) + "," + String(data2.ADF5) + "," + String(data2.ADF7) + "," + String(data2.ADF8) + "," + String(data2.ADCLEAR) + "," + String(data2.ADF6) + "," + String(data2.ADNIR);
 
 
 }
@@ -112,13 +117,15 @@ void calibreate_scale() {
 
 
 void loop() {
-  float Weight = MyScale.readWeight();
-  Serial.print("weight is: ");
-  if (Weight > 0.5) {
-    Serial.print(Weight, 1);
-  } else {
-    Serial.print(0, 1);
-  }
-  Serial.println(" g");
+  // float Weight = MyScale.readWeight();
+  // Serial.print("weight is: ");
+  // if (Weight > 0.5) {
+  //   Serial.print(Weight, 1);
+  // } else {
+  //   Serial.print(0, 1);
+  // }
+  // Serial.println(" g");
   delay(1000);
+  as7341_output="as7341:123,456,789,101,112,131,415,161,718";
+  Serial1.println(as7341_output);
 }
