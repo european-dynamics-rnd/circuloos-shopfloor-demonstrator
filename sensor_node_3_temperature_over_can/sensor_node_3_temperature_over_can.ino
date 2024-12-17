@@ -3,12 +3,12 @@
 
 
 
-MCP9600 sensor;
+MCP9600 sensor(0x66);
 float mcp9600_temp = 0;
 
 // Pt1000
-const float voltageRef = 5.000;                                     //Set reference voltage,you need test your IOREF voltage.
-int HighTemperaturePin = 1;                                        //Setting pin
+const float voltageRef = 3.300;                                     //Set reference voltage,you need test your IOREF voltage.
+int HighTemperaturePin = 15;             // pin 15-> adc3                           //Setting pin
 DFRobotHighTemperature PT100 = DFRobotHighTemperature(voltageRef);  //Define an PT100 object
 int pt100_temp = 0;
 
@@ -75,5 +75,5 @@ void loop() {
   pt100_temp = PT100.readTemperature(HighTemperaturePin);  //Get temperature
   Serial.print("PT100:  ");
   Serial.print(pt100_temp);
-  Serial.println("  ^C");
+  Serial.println("  C");
 }
