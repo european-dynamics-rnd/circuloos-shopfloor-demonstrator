@@ -47,7 +47,7 @@ Next, the material (up to 5 kg) is placed on the scale. After waiting for the me
 
 The data is then sent via RS-485 to the Raspberry Pi. An python script reads the data from the serial and transform it on a NGSI-LD entity where it becomes available on the local CIRCULOOS data platform.
 
---Image placeholder --
+![node_1](./images/node_1.jpg)
 
 
 ## sensor_node_2_environmental_over_wifi
