@@ -1,11 +1,20 @@
 #include <math.h>
+#include <ezButton.h>  // by ArduinoGetStarted.com
 
+ezButton BUTTON_SCALE(15);      //yellow button
+ezButton BUTTON_AS7341(2);      //blue buttoon
+ezButton BUTTON_SEND_DATA(14);  // green button
+
+int BUTTON_SCALE_state = 0;
+int BUTTON_AS7341_state = 0;
+int BUTTON_SEND_DATA_state = 0;
 
 #include "DFRobot_HX711_I2C.h"
 #include "DFRobot_AS7341.h"
 
 //DFRobot_HX711_I2C MyScale(&Wire,/*addr=*/0x64);
 DFRobot_HX711_I2C MyScale;
+float weight = 0;
 
 DFRobot_AS7341 as7341;
 
@@ -19,34 +28,50 @@ String hex_color;
 #define RXD1 36
 #define TXD1 4
 
+String final_resault="";
+
 
 void setup() {
   Serial.begin(115200);
   Serial1.begin(9600, SERIAL_8E1, RXD1, TXD1);
   // calibreate_scale();
   startup_as7341();
+  setup_buttons();
 }
 
 
 
+void setup_buttons() {
+  BUTTON_SCALE.setDebounceTime(50);      // set debounce time to 50 milliseconds
+  BUTTON_AS7341.setDebounceTime(50);     // set debounce time to 50 milliseconds
+  BUTTON_SEND_DATA.setDebounceTime(50);  // set debounce time to 50 milliseconds
+}
 
+void read_buttons() {
+  BUTTON_SCALE.loop();
+  BUTTON_AS7341.loop();
+  BUTTON_SEND_DATA.loop();
+  BUTTON_SCALE_state = BUTTON_SCALE.getState();
+  BUTTON_AS7341_state = BUTTON_AS7341.getState();
+  BUTTON_SEND_DATA_state = BUTTON_SEND_DATA.getState();
+}
 void startup_as7341() {
   while (as7341.begin() != 0) {
     Serial.println("IIC init failed, please check if the wire connection is correct");
     delay(1000);
   }
-   //Integration time = (ATIME + 1) x (ASTEP + 1) x 2.78µs
-   //Set the value of register ATIME(1-255), through which the value of Integration time can be calculated. The value represents the time that must be spent during data reading.
-   as7341.setAtime(29);
-   //Set the value of register ASTEP(0-65534), through which the value of Integration time can be calculated. The value represents the time that must be spent during data reading.
-   as7341.setAstep(1000);
-   //Set gain value(0~10 corresponds to X0.5,X1,X2,X4,X8,X16,X32,X64,X128,X256,X512)
-   as7341.setAGAIN(2);
+  //Integration time = (ATIME + 1) x (ASTEP + 1) x 2.78µs
+  //Set the value of register ATIME(1-255), through which the value of Integration time can be calculated. The value represents the time that must be spent during data reading.
+  as7341.setAtime(29);
+  //Set the value of register ASTEP(0-65534), through which the value of Integration time can be calculated. The value represents the time that must be spent during data reading.
+  as7341.setAstep(1000);
+  //Set gain value(0~10 corresponds to X0.5,X1,X2,X4,X8,X16,X32,X64,X128,X256,X512)
+  as7341.setAGAIN(2);
 
   // //  Enable LED
-  // as7341.enableLed(true);
+  as7341.enableLed(true);
   // //  Set pin current to control brightness (1~20 corresponds to current 4mA,6mA,8mA,10mA,12mA,......,42mA)
-  // as7341.controlLed(1);
+  as7341.controlLed(1);
 }
 
 t_as7341 read_as7341(bool detailed_print) {
@@ -86,8 +111,8 @@ t_as7341 read_as7341(bool detailed_print) {
     Serial.print("NIR:");
     Serial.println(data2.ADNIR);
   }
-  local_as7341_data.as7341_string = "as7341:" + String(data1.ADF2) + "," + String(data1.ADF4) + "," + String(data1.ADF3) + "," + String(data2.ADF5) + "," + String(data2.ADF7) + "," + String(data2.ADF8) + "," + String(data2.ADCLEAR) + "," + String(data2.ADF6) + "," + String(data2.ADNIR);
-  
+  local_as7341_data.as7341_string = String(data1.ADF2) + ";" + String(data1.ADF4) + ";" + String(data1.ADF3) + ";" + String(data2.ADF5) + ";" + String(data2.ADF7) + ";" + String(data2.ADF8) + ";" + String(data2.ADCLEAR) + ";" + String(data2.ADF6) + ";" + String(data2.ADNIR);
+
   local_as7341_data.spectralData[0] = data1.ADF1;
   local_as7341_data.spectralData[1] = data1.ADF2;
   local_as7341_data.spectralData[2] = data1.ADF3;
@@ -145,6 +170,7 @@ String calculateColor(int spectralData[]) {
 
   char hexColor[8];
   sprintf(hexColor, "#%02X%02X%02X", r, g, b);
+  // Show to LCD
 
   return String(hexColor);
 }
@@ -179,12 +205,10 @@ void calibreate_scale() {
   MyScale.setCalibration(MyScale.getCalibration());
 }
 
+void read_scale() {
+  float weight = MyScale.readWeight();
+  // Show to LCD
 
-
-
-
-void loop() {
-  // float Weight = MyScale.readWeight();
   // Serial.print("weight is: ");
   // if (Weight > 0.5) {
   //   Serial.print(Weight, 1);
@@ -192,14 +216,36 @@ void loop() {
   //   Serial.print(0, 1);
   // }
   // Serial.println(" g");
-  as7341_data = read_as7341(false);
-  // as7341_string="as7341:123,456,789,101,112,131,415,161,718";
-  Serial.println(as7341_data.as7341_string);
-  hex_color = calculateColor(as7341_data.spectralData);
-  Serial.print("Hex color: ");
-  Serial.println(hex_color);
-  // Serial1.println(as7341_string);
+}
 
 
-  delay(1000);
+
+void loop() {
+  read_buttons();
+
+  if (BUTTON_SCALE.isPressed()) {
+    read_scale();
+  }
+
+  weight = 342.6;
+
+  // if (BUTTON_AS7341.isPressed()) {
+      if (1) {
+    as7341_data = read_as7341(false);
+    // as7341_string="as7341:123,456,789,101,112,131,415,161,718";
+    // Serial.println(as7341_data.as7341_string);
+    // hex_color = calculateColor(as7341_data.spectralData);
+    // Serial.print("Hex color: ");
+    // Serial.println(hex_color);
+  }
+
+  // if (BUTTON_SEND_DATA.isPressed()) {
+    if(1){
+    final_resault="#1;"+String(weight) + ";" + as7341_data.as7341_string+ "#";
+    Serial.println(final_resault);
+    Serial1.println(final_resault);
+  }
+
+
+  delay(1);
 }
