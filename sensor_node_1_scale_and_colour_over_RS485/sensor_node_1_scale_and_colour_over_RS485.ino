@@ -1,22 +1,41 @@
+/*
+ESP32 used pins:
+2  -> AS7341_GPIO_0, IDC10
+4  -> RS485_TX, IDC10
+13 -> I2C_SDA, IDC10 + EXT_1
+14 -> Potantiometer, EXT_1
+15 -> AS7341_INT, IDC10
+16 -> I2C_SCL, IDC10 + EXT_1
+18  -> Blue button, EXT_1
+19 -> Green button, EXT_1
+22 -> Yellow button, EXT_1
+36 -> RS485_RX, IDC10
+
+*/
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+
 #include <math.h>
-#include <ezButton.h>  // by ArduinoGetStarted.com
+// #include <ezButton.h>  // by ArduinoGetStarted.com
 
-ezButton BUTTON_SCALE(15);      //yellow button
-ezButton BUTTON_AS7341(2);      //blue buttoon
-ezButton BUTTON_SEND_DATA(14);  // green button
-
-int BUTTON_SCALE_state = 0;
-int BUTTON_AS7341_state = 0;
-int BUTTON_SEND_DATA_state = 0;
+#define BUTTON_SCALE 22          //yellow button
+#define BUTTON_AS7341 19         // green button
+#define BUTTON_SEND_DATA 18      //blue buttoon
+#define AS7341_POTENTIOMETER 14  // potentiometer for AS7341 LED level
 
 #include "DFRobot_HX711_I2C.h"
 #include "DFRobot_AS7341.h"
 
 //DFRobot_HX711_I2C MyScale(&Wire,/*addr=*/0x64);
 DFRobot_HX711_I2C MyScale;
-float weight = 0;
+float weight = -1;
+bool is_scale_calibrated=false ; 
+
 
 DFRobot_AS7341 as7341;
+int as7341_led_level = 1;
 
 struct t_as7341 {
   int spectralData[8];
@@ -28,33 +47,38 @@ String hex_color;
 #define RXD1 36
 #define TXD1 4
 
-String final_resault="";
+String final_resault = "";
 
 
 void setup() {
   Serial.begin(115200);
   Serial1.begin(9600, SERIAL_8E1, RXD1, TXD1);
-  // calibreate_scale();
   startup_as7341();
   setup_buttons();
+  setup_lcd();
+  pinMode(AS7341_POTENTIOMETER, INPUT);
+  Serial.println("starting....");
 }
 
+void setup_lcd() {
+  lcd.init();  // initialize the lcd
+  lcd.backlight();
 
+  lcd.home();
+
+  lcd.setCursor(0, 0);
+  // lcd.print("1234567890123456"
+  lcd.print("-+ CIRCULOOS +-");
+  lcd.setCursor(0, 1);
+  lcd.print("SHOPFLOOR Demo");
+}
 
 void setup_buttons() {
-  BUTTON_SCALE.setDebounceTime(50);      // set debounce time to 50 milliseconds
-  BUTTON_AS7341.setDebounceTime(50);     // set debounce time to 50 milliseconds
-  BUTTON_SEND_DATA.setDebounceTime(50);  // set debounce time to 50 milliseconds
+  pinMode(BUTTON_SCALE, INPUT);
+  pinMode(BUTTON_AS7341, INPUT);
+  pinMode(BUTTON_SEND_DATA, INPUT);
 }
 
-void read_buttons() {
-  BUTTON_SCALE.loop();
-  BUTTON_AS7341.loop();
-  BUTTON_SEND_DATA.loop();
-  BUTTON_SCALE_state = BUTTON_SCALE.getState();
-  BUTTON_AS7341_state = BUTTON_AS7341.getState();
-  BUTTON_SEND_DATA_state = BUTTON_SEND_DATA.getState();
-}
 void startup_as7341() {
   while (as7341.begin() != 0) {
     Serial.println("IIC init failed, please check if the wire connection is correct");
@@ -71,7 +95,7 @@ void startup_as7341() {
   // //  Enable LED
   as7341.enableLed(true);
   // //  Set pin current to control brightness (1~20 corresponds to current 4mA,6mA,8mA,10mA,12mA,......,42mA)
-  as7341.controlLed(1);
+  as7341.controlLed(as7341_led_level);
 }
 
 t_as7341 read_as7341(bool detailed_print) {
@@ -179,6 +203,9 @@ String calculateColor(int spectralData[]) {
 void calibreate_scale() {
   while (!MyScale.begin()) {
     Serial.println("The initialization of the chip is failed, please confirm whether the chip connection is correct");
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("SCALE init probl");
     delay(1000);
   }
   //Set the calibration weight when the weight sensor module is automatically calibrated (g)
@@ -189,6 +216,12 @@ void calibreate_scale() {
 
   //Start sensor calibration
   Serial.println("Please put the object within 5S");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Please put the ");
+  lcd.setCursor(0, 1);
+  lcd.print("object within 5S");
+
   MyScale.enableCal();
   long time1 = millis();
   //Wait for sensor calibration to complete
@@ -196,6 +229,9 @@ void calibreate_scale() {
     delay(1000);
     if ((millis() - time1) > 7000) {
       Serial.println("The calibration failed this time, and no object is detected within 5S. The last calibration value will be used.");
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("The calibration failed");
       break;
     }
   }
@@ -205,47 +241,65 @@ void calibreate_scale() {
   MyScale.setCalibration(MyScale.getCalibration());
 }
 
-void read_scale() {
-  float weight = MyScale.readWeight();
+float read_scale() {
+  float _weight = MyScale.readWeight();
   // Show to LCD
-
-  // Serial.print("weight is: ");
-  // if (Weight > 0.5) {
-  //   Serial.print(Weight, 1);
-  // } else {
-  //   Serial.print(0, 1);
-  // }
-  // Serial.println(" g");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("weight is: ");
+  lcd.setCursor(0, 1);
+  if (_weight > 0.5) {
+    lcd.print(_weight, 1);
+  } else {
+    lcd.print(0, 1);
+  }
+  lcd.print(" gr");
+  return _weight;
 }
 
 
 
 void loop() {
-  read_buttons();
+  if (digitalRead(BUTTON_AS7341) == LOW) {
+    Serial.println("BUTTON_AS7341");
+    Serial.print("led_level: ");
+    Serial.println(as7341_led_level);
 
-  if (BUTTON_SCALE.isPressed()) {
-    read_scale();
-  }
-
-  weight = 342.6;
-
-  // if (BUTTON_AS7341.isPressed()) {
-      if (1) {
     as7341_data = read_as7341(false);
-    // as7341_string="as7341:123,456,789,101,112,131,415,161,718";
-    // Serial.println(as7341_data.as7341_string);
-    // hex_color = calculateColor(as7341_data.spectralData);
-    // Serial.print("Hex color: ");
-    // Serial.println(hex_color);
+    Serial.println(as7341_data.as7341_string);
+    hex_color = calculateColor(as7341_data.spectralData);
+    Serial.print("Hex color: ");
+    Serial.println(hex_color);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Hex color:");
+    lcd.setCursor(0, 1);
+    lcd.print(hex_color);
+    delay(10);
   }
 
-  // if (BUTTON_SEND_DATA.isPressed()) {
-    if(1){
+  if (digitalRead(BUTTON_SCALE) == LOW) {
+    Serial.println(" BUTTON_SCALE");
+    if (!is_scale_calibrated) {
+      calibreate_scale();
+      is_scale_calibrated=true;
+    }
+    weight = read_scale();
+  }
+
+  if (digitalRead(BUTTON_SEND_DATA) == LOW) {
     final_resault="#1;"+String(weight) + ";" + as7341_data.as7341_string+ "#";
     Serial.println(final_resault);
     Serial1.println(final_resault);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Sending Data:");
+    lcd.setCursor(0, 1);
+    lcd.print(final_resault);
   }
 
+  as7341_led_level = map(analogRead(AS7341_POTENTIOMETER), 100, 4095, 0, 18);
+  as7341.controlLed(as7341_led_level);
 
-  delay(1);
+  delay(10);
 }
