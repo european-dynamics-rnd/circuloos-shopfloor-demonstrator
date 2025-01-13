@@ -43,10 +43,11 @@ The sensor node/ESP32  is designed to simulate a station that measures the weigh
 
 The user begins the procedure by pressing a button to activate the color sensor. They then position the sensor over the material to be identified. The detected color will be displayed on the LCD. Once the user finalizes the procedure, they release the button.
 
-Next, the material (up to 5 kg) is placed on the scale. After waiting for the measurement to stabilize, the user gently presses the button.
+Next, the material (up to 1 kg) is placed on the scale. After waiting for the measurement to stabilize, the user gently presses the button.
 
 The data is then sent via RS-485 to the Raspberry Pi. An python script reads the data from the serial and transform it on a NGSI-LD entity where it becomes available on the local CIRCULOOS data platform.
 
+![node_1_display](./images/node_1_display.jpg)
 ![node_1](./images/node_1.jpg)
 
 
