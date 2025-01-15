@@ -107,15 +107,15 @@ void loop() {
   mcp9600_get_temperature(&mcp9600_temp);
   int_mcp9600_temp = round(mcp9600_temp * 100);
 
-  Serial.print("mcp9600_temp :");
-  Serial.println(mcp9600_temp);
-  Serial.println();
+  Serial.print("mcp9600_temp: ");
+  Serial.print(mcp9600_temp);
+  Serial.println(" C");
   delay(10);
   pt100_temp = PT100.readTemperature(HighTemperaturePin);  //Get temperature
   float_pt100_temp=pt100_temp/10;
   Serial.print("PT100:  ");
   Serial.print(float_pt100_temp);
-  Serial.println("  C");
+  Serial.println(" C");
 
   send_measurement_can(int_mcp9600_temp,pt100_temp);
   delay(1000*10 );
