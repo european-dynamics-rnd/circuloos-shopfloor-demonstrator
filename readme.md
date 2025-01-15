@@ -3,6 +3,8 @@
 The current repo is a collection of hardware and software compoment ment to simulate the jurney of the measurements of a shopfloor to a local RAMP IIoT instance (on a RasberyPi) and on the centalazed CIRCULOOS Data platform.
 The demo consist of a full end to end solution ie from the sensor to the communication inside the shopfloor to the local RAMP IIoT instance and to the centalazed CIRCULOOS Data platform.
 
+# Troubleshoot
+See ![Troubleshoot](./Troubleshoot.md)
 
 ## Measurements
 The following measurements (from various sensors) are included:
