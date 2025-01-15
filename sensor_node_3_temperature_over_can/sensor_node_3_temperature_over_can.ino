@@ -3,7 +3,7 @@
 
 #include <ESP32-TWAI-CAN.hpp>
 #define CAN_TX 5  // Connects to CTX
-#define CAN_RX 4  // Connects to CRX
+#define CAN_RX 35  // Connects to CRX
 
 
 CanFrame rxFrame;  // Create frame to read
@@ -17,7 +17,7 @@ const float voltageRef = 3.300;                                     //Set refere
 int HighTemperaturePin = 15;                                        // pin 15-> adc3                           //Setting pin
 DFRobotHighTemperature PT100 = DFRobotHighTemperature(voltageRef);  //Define an PT100 object
 int pt100_temp = 0;
-
+float_pt100_temp=0;
 
 err_t mcp9600_sensor_basic_config() {
   err_t ret = NO_ERROR;
@@ -112,10 +112,11 @@ void loop() {
   Serial.println();
   delay(10);
   pt100_temp = PT100.readTemperature(HighTemperaturePin);  //Get temperature
+  float_pt100_temp=pt100_temp/10;
   Serial.print("PT100:  ");
-  Serial.print(pt100_temp);
+  Serial.print(float_pt100_temp);
   Serial.println("  C");
 
   send_measurement_can(int_mcp9600_temp,pt100_temp);
-  delay(1000*60 );
+  delay(1000*10 );
 }
